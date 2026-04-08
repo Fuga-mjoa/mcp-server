@@ -4,29 +4,66 @@ const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(async (req, res) => {
 
-  if (req.url.startsWith("/price")) {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const symbol = url.searchParams.get("symbol") || "AAPL";
+  if (req.method === "POST") {
+    let body = "";
 
-    const response = await fetch(
-      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d7b58spr01qhndem31lgd7b58spr01qhndem31m0`
-    );
+    req.on("data", chunk => {
+      body += chunk;
+    });
 
-    const data = await response.json();
+    req.on("end", async () => {
+      const request = JSON.parse(body);
 
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({
-      symbol,
-      price: data.c
-    }));
+      if (request.method === "tools/list") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          tools: [
+            {
+              name: "get_price",
+              description: "Get stock price",
+              input_schema: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string" }
+                },
+                required: ["symbol"]
+              }
+            }
+          ]
+        }));
+      }
 
+      if (request.method === "tools/call") {
+        const symbol = request.params.symbol;
+
+        const response = await fetch(
+          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d7b58spr01qhndem31lgd7b58spr01qhndem31m0`
+        );
+
+        const data = await response.json();
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                symbol,
+                price: data.c
+              })
+            }
+          ]
+        }));
+      }
+
+    });
   } else {
     res.writeHead(200);
-    res.end("MCP server running");
+    res.end("MCP server ready");
   }
 
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
