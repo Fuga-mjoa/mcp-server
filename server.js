@@ -58,10 +58,9 @@ const server = http.createServer(async (req, res) => {
 
     });
   } else {
-    res.writeHead(200);
-    res.writeHead(200, { "Content-Type": "application/json" });
-res.end(JSON.stringify({ status: "ok" }));
-  }
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ status: "ok" }));
+}
 
 });
 
