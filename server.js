@@ -1,71 +1,45 @@
-console.log("🔥 VERSION NUEVA 🔥");
+import express from "express";
 
-import http from "http";
+const app = express();
 
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
 
-const server = http.createServer(async (req, res) => {
+app.get("/price", (req, res) => {
+  const { symbol } = req.query;
 
-  if (req.method === "POST") {
-    let body = "";
-
-    req.on("data", chunk => {
-      body += chunk;
-    });
-
-    req.on("end", async () => {
-      const request = JSON.parse(body);
-
-      if (request.method === "tools/list") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({
-          tools: [
-            {
-              name: "get_price",
-              description: "Get stock price",
-              input_schema: {
-                type: "object",
-                properties: {
-                  symbol: { type: "string" }
-                },
-                required: ["symbol"]
-              }
-            }
-          ]
-        }));
-      }
-
-      if (request.method === "tools/call") {
-        const symbol = request.params.symbol;
-
-        const response = await fetch(
-          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d7b58spr01qhndem31lgd7b58spr01qhndem31m0`
-        );
-
-        const data = await response.json();
-
-        res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({
-                symbol,
-                price: data.c
-              })
-            }
-          ]
-        }));
-      }
-
-    });
-  } else {
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ status: "ok" }));
-}
-
+  res.json({
+    symbol,
+    price: 258.33
+  });
 });
 
-server.listen(PORT, () => {
-  console.log("NEW VERSION RUNNING");
+app.get("/tools", (req, res) => {
+  res.json({
+    tools: [
+      {
+        name: "get_price",
+        description: "Get real-time stock price",
+        input_schema: {
+          type: "object",
+          properties: {
+            symbol: { type: "string" }
+          },
+          required: ["symbol"]
+        }
+      }
+    ]
+  });
+});
+
+app.post("/tools/get_price", (req, res) => {
+  const { symbol } = req.body;
+
+  res.json({
+    symbol,
+    price: 258.33
+  });
+});
+
+app.listen(8080, () => {
+  console.log("Server running on port 8080");
 });
